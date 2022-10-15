@@ -27,7 +27,10 @@ func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/:id", getAlbumById)
+
 	router.POST("/albums", postAlbum)
+
+	router.DELETE("/albums/:id", deleteAlbum)
 
 	router.Run("localhost:8080")
 }
@@ -49,10 +52,7 @@ func getAlbumById(c *gin.Context) {
 		}
 	}
 
-	// Format album not found message and send it with HTTP Status 404
-	notFoundMessage := fmt.Sprintf("The album with the id: %v does not exist", id)
-
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": notFoundMessage})
+	albumNotFound(c, id)
 }
 
 // postAlbum adds an album to the album slice and returns it as JSON
@@ -68,4 +68,27 @@ func postAlbum(c *gin.Context) {
 	// Add the album to the slice
 	albums = append(albums, newAlbum)
 	c.IndentedJSON(http.StatusOK, newAlbum)
+}
+
+// deleteAlbum deletes the album from the albums slice and returns it as JSON
+func deleteAlbum(c *gin.Context) {
+	id := c.Param("id")
+
+	for i, album := range albums {
+		if album.ID == id {
+			// Remove album from slice https://stackoverflow.com/questions/59596644/golang-append-changing-append-parameter
+			albums = append(albums[:i], albums[i+1:]...)
+			c.IndentedJSON(http.StatusOK, album)
+			return
+		}
+	}
+
+	albumNotFound(c, id)
+}
+
+func albumNotFound(c *gin.Context, id string) {
+	// Format album not found message and send it with HTTP Status 404
+	notFoundMessage := fmt.Sprintf("The album with the id: %v does not exist", id)
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": notFoundMessage})
 }
