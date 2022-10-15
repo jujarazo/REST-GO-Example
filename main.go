@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ var albums = []album{
 func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
+	router.GET("/albums/:id", getAlbumById)
 	router.POST("/albums", postAlbum)
 
 	router.Run("localhost:8080")
@@ -34,6 +36,25 @@ func getAlbums(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, albums)
 }
 
+func getAlbumById(c *gin.Context) {
+	// Extract the album id from the gin context
+	id := c.Param("id")
+
+	// Loop through the albums slice to find the album with the same id
+	for _, album := range albums {
+		if album.ID == id {
+			c.IndentedJSON(http.StatusOK, album)
+			return
+		}
+	}
+
+	// Format album not found message and send it with HTTP Status 404
+	notFoundMessage := fmt.Sprintf("The album with the id: %v does not exist", id)
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": notFoundMessage})
+}
+
+// postAlbum adds an album to the album slice and returns it as JSON
 func postAlbum(c *gin.Context) {
 	var newAlbum album
 
